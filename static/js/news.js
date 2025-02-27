@@ -121,6 +121,15 @@ function fetchNews(category, customUrl = null) {
         });
 }
 
+function escapeHtml(html) {
+    return String(html)
+    .replaceAll(/&/g, '&amp;')
+    .replaceAll(/</g, '&lt;')
+    .replaceAll(/>/g, '&gt;')
+    .replaceAll(/"/g, '&quot;')
+    .replaceAll(/'/g, '&#39;');
+}
+
 function renderNews(data) {
     const newsContainer = document.getElementById('news-root');
     const newsList = newsContainer.querySelector('.news-list');
@@ -138,12 +147,14 @@ function renderNews(data) {
     newsItems.forEach(item => {
         const date = new Date(item.date || new Date()).toLocaleDateString();
         const hasImage = item.imageUrl && item.imageUrl !== 'null';
-        
+
+
+
         html += `
             <div class="news-item">
                 <div class="news-title">${item.title}</div>
                 ${hasImage ? `<div class="news-image"><img src="${item.imageUrl}" alt="${item.title}"></div>` : ''}
-                <div class="news-content">${item.content}</div>
+                <div class="news-content">${escapeHtml(item.content)}</div>
                 <div class="news-meta">
                     <span>${date}</span>
                     <a href="${item.readMoreUrl}" target="_blank" class="read-more">Read more</a>
