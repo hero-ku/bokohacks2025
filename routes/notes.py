@@ -3,7 +3,7 @@ from extensions import db
 from models.user import User
 from models.note import Note
 from datetime import datetime
-from sqlalchemy import text
+from sqlalchemy import text, or_, and_
 
 notes_bp = Blueprint('notes', __name__, url_prefix='/apps/notes')
 
@@ -90,32 +90,34 @@ def search_notes():
     print(f"Search query: {query}")
     
     try:
-        sql = f"SELECT * FROM notes WHERE title LIKE '%{query}%' OR content LIKE '%{query}%'"
-        
-        # Log the raw SQL for debugging
-        print(f"Executing SQL: {sql}")
-        
-        # Execute the raw SQL
-        result = db.session.execute(text(sql))
-        
+        # use ORM-style query that automatically prevents SQL injection
+        # also filters by user_id which previous raw query didn't
+        result = Note.query.filter(
+            or_(
+                Note.title.ilike(f'%{query}%'),
+                Note.content.ilike(f'%{query}%')
+            )
+        ).filter_by(user_id=current_user.id).all()
+
         notes = []
-        for row in result:
+        for note in result:
+
             # Handle created_at formatting properly - could be a string or datetime
-            created_at = row[3]
-            if isinstance(created_at, str):
-                created_at_str = created_at
+
+            if isinstance(note.created_at, str):
+                created_at_str = note.created_at
             else:
                 try:
-                    created_at_str = created_at.strftime('%Y-%m-%d %H:%M:%S') if created_at else None
+                    created_at_str = note.created_at.strftime('%Y-%m-%d %H:%M:%S') if note.created_at else None
                 except AttributeError:
-                    created_at_str = str(created_at) if created_at else None
+                    created_at_str = str(note.created_at) if note.created_at else None
             
             note = {
-                'id': row[0],
-                'title': row[1],
-                'content': row[2],
-                'created_at': created_at_str,
-                'user_id': row[4]
+                'id': note.id,
+                'title': note.title,
+                'content': note.content,
+                'created_at': note.created_at.strftime('%Y-%m-%d %H:%M:%S') if note.created_at else None,
+                'user_id': note.user_id
             }
             notes.append(note)
         
@@ -145,6 +147,10 @@ def delete_note(note_id):
         if not note:
             print(f"Note not found: {note_id}")
             return jsonify({'success': False, 'error': f'Note with ID {note_id} not found'}), 404
+        
+        if note.user_id != current_user.id:
+            print(f"Unauthorized delete attempt by user {current_user.id} on note {note_id}")
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 403
         
         print(f"Deleting note ID: {note_id}, Title: {note.title}, Owner: {note.user_id}")
         
