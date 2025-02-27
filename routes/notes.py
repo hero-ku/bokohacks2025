@@ -148,6 +148,7 @@ def delete_note(note_id):
             print(f"Note not found: {note_id}")
             return jsonify({'success': False, 'error': f'Note with ID {note_id} not found'}), 404
         
+        # Check if the note belongs to the current user before deleting
         if note.user_id != current_user.id:
             print(f"Unauthorized delete attempt by user {current_user.id} on note {note_id}")
             return jsonify({'success': False, 'error': 'Unauthorized'}), 403
@@ -167,6 +168,7 @@ def delete_note(note_id):
 @notes_bp.route('/debug')
 def debug_database():
     """Debug route to check database contents"""
+    # Check if debug mode is enabled
     if not current_app.debug:
         return jsonify({'error': 'Debug mode is off'}), 403
 
