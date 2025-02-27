@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, session
+from flask import Blueprint, render_template, request, jsonify, session, current_app
 from extensions import db
 from models.user import User
 from models.note import Note
@@ -167,6 +167,9 @@ def delete_note(note_id):
 @notes_bp.route('/debug')
 def debug_database():
     """Debug route to check database contents"""
+    if not current_app.debug:
+        return jsonify({'error': 'Debug mode is off'}), 403
+
     try:
         users = User.query.all()
         print("\nAll Users:")
