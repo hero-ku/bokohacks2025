@@ -154,6 +154,9 @@ def download_file(file_id):
     try:
         file = File.query.get_or_404(file_id)
         print(f"Found file {file_id}: {file.filename}")
+
+        if file.id != current_user.id:
+            return jsonify({'success': False, 'error': 'File does not belong to the user.'}), 401
         
         
         # Get the directory and filename
