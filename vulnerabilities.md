@@ -8,3 +8,6 @@ Access control vulnerability in `notes.py`, `delete_note` route only verified th
 
 Access control vulnerability in `notes.py`, `debug` route was usable by any user regardless of whether the Debug flag in app.py was set to true when running.
 Fixed by early returning with a 403 Forbidden status if the Debug flag is not enabled. Responsibility of the one launching the app in production to make sure the Debug flag is off.
+
+Authentication vulnerability in `register.py`, `register` route allowed user to sign up with insecure passwords that contained no special characters and enforced no minimum length.
+Fixed by requiring the user to enter a password that is at least 8 characters long and contains one special character, uppercase letter, and digit.
