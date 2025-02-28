@@ -153,11 +153,11 @@ function renderNews(data) {
         html += `
             <div class="news-item">
                 <div class="news-title">${item.title}</div>
-                ${hasImage ? `<div class="news-image"><img src="${item.imageUrl}" alt="${item.title}"></div>` : ''}
+                ${hasImage ? `<div class="news-image"><img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.title)}"></div>` : ''}
                 <div class="news-content">${escapeHtml(item.content)}</div>
                 <div class="news-meta">
                     <span>${date}</span>
-                    <a href="${item.readMoreUrl}" target="_blank" class="read-more">Read more</a>
+                    <a href="${escapeHtml(item.readMoreUrl)}" target="_blank" class="read-more">Read more</a>
                 </div>
             </div>
         `;
