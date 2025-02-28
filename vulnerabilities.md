@@ -11,3 +11,6 @@ Fixed by early returning with a 403 Forbidden status if the Debug flag is not en
 
 Authentication vulnerability in `register.py`, `register` route allowed user to sign up with insecure passwords that contained no special characters and enforced no minimum length.
 Fixed by requiring the user to enter a password that is at least 8 characters long and contains one special character, uppercase letter, and digit.
+
+Insecure design vulnerability in `retirement.py`, `contribute` route allowed user to schedule multiple contributions occur before the subsequent contributions finished, bypassing the fund validation, and allowing funds to go into the negatives.
+Fixed by first transitioning retirement fund storage to the database and then adding check constraints.

@@ -3,15 +3,9 @@ from extensions import db
 from models.user import User
 import time
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 
 retirement_bp = Blueprint("retirement", __name__, url_prefix="/apps/401k")
-
-user_accounts = {
-    "alice": {"funds": 10000, "401k_balance": 5000},
-    "bob": {"funds": 12000, "401k_balance": 7500},
-    "charlie": {"funds": 15000, "401k_balance": 8084},
-    "admin": {"funds": 20000, "401k_balance": 12000}
-}
 
 @retirement_bp.route("/")
 def retirement_dashboard():
@@ -22,13 +16,13 @@ def retirement_dashboard():
 @retirement_bp.route("/balance")
 def get_balance():
     if "user" not in session:
-        return jsonify({"error": "Not logged in"}), 401
-        
-    username = session["user"]
-    if username not in user_accounts:
-        user_accounts[username] = {"funds": 10000, "401k_balance": 0}
-        
-    return jsonify(user_accounts[username])
+        return jsonify({ "success": False, "error": "Not logged in"}), 401
+    
+    current_user = User.query.filter_by(username=session["user"]).first()
+    if not current_user:
+        return jsonify({ "success": False, "error": "User not found"}), 404
+            
+    return jsonify({ "funds": current_user.funds, "401k_balance": current_user.retirement_funds })
 
 @retirement_bp.route("/contribute", methods=["POST"])
 def contribute():
@@ -39,38 +33,41 @@ def contribute():
     amount = data.get("amount", 0)
     
     username = session["user"]
-    if username not in user_accounts:
-        user_accounts[username] = {"funds": 10000, "401k_balance": 0}
+    current_user: User = User.query.filter_by(username=username).first()
+    if not current_user:
+        return jsonify({ "success": False, "error": "User not found"}), 404
     
-    user_data = user_accounts[username]
-
-    if amount <= 0:
-        return jsonify({
-            "message": "Invalid contribution amount!", 
-            "funds": user_data["funds"],
-            "401k_balance": user_data["401k_balance"]
-        }), 400
-    
-    if amount > user_data["funds"]:
+    if amount > current_user.funds:
         return jsonify({
             "message": "Insufficient personal funds for this contribution!", 
-            "funds": user_data["funds"],
-            "401k_balance": user_data["401k_balance"]
+            "funds": current_user.funds,
+            "401k_balance": current_user.retirement_funds,
         }), 400
 
-
-    time.sleep(2)  
+    time.sleep(2)
 
     company_match = amount * 0.5
     total_contribution = amount + company_match
 
-    user_data["funds"] -= amount  # Deduct funds
-    user_data["401k_balance"] += total_contribution  # Add to 401k balance
-
+    try:
+        db.session.execute(text("UPDATE users SET funds = funds - :amount, retirement_funds = retirement_funds + :total_contribution WHERE username = :username"), {
+            "amount": amount,
+            "total_contribution": total_contribution,
+            "username": username
+        })
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({
+            "message": "Error processing contribution!", 
+            "funds": current_user.funds,
+            "401k_balance": current_user.retirement_funds,
+        }), 400
+        
     return jsonify({
         "message": f"Contributed ${amount}. Employer matched ${company_match}!",
-        "funds": user_data["funds"],
-        "401k_balance": user_data["401k_balance"]
+        "funds": current_user.funds,
+        "401k_balance": current_user.retirement_funds
     })
 
 @retirement_bp.route("/reset", methods=["POST"])
@@ -78,18 +75,18 @@ def reset_account():
     if "user" not in session:
         return jsonify({"error": "Not logged in"}), 401
         
+
     username = session["user"]
-    if username not in user_accounts:
-        return jsonify({
-            "message": "Account not found!", 
-            "funds": 0,
-            "401k_balance": 0
-        }), 404
+    current_user: User = User.query.filter_by(username=username).first()
+    if not current_user:
+        return jsonify({ "success": False, "error": "User not found"}), 404
     
-    user_accounts[username] = {"funds": 10000, "401k_balance": 0}
-    
+    current_user.funds = 10_000
+    current_user.retirement_funds = 0
+    db.session.commit()
+
     return jsonify({
         "message": "Account reset successfully!",
-        "funds": user_accounts[username]["funds"],
-        "401k_balance": user_accounts[username]["401k_balance"]
+        "funds": current_user.funds,
+        "401k_balance": current_user.retirement_funds,
     })
