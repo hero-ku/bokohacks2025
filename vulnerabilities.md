@@ -16,3 +16,6 @@ Insecure design vulnerability in `retirement.py`, `contribute` route allowed use
 Fixed by first transitioning retirement fund storage to the database and then adding check constraints.
 
 Insecure design vulnerability in `captcha.py`, `captcha/generate` route doesn't return a randomly generated CAPTCHA, removing any challenge for botted registration.
+
+Insecure design vulnerability in `files.py`, `upload` route didn't actually verify that the filetype was allowed.
+Fixed with simple if clause.
