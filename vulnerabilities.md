@@ -23,3 +23,6 @@ Fixed with simple if clause.
 
 Authentication vulnerability in `admin.py`, `admin/users/add` route didn't verify the strength of the inputted password in coordination with the register page.
 Fixed by requiring the user to enter a password with the same strength requirements as the register page.
+
+SQL injection vulnerability in `admin.py`, `admin` route had an unnecessary and insecure raw SQL check to see if the credentials belonged to a valid admin account when the same check had already been made in a safer way.
+Fixed by removing the check.

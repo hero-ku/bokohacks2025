@@ -91,27 +91,6 @@ def admin():
                     'admins': get_admin_list()
                 })
         
-        try:
-            query = f"SELECT * FROM users WHERE username = '{username}' AND password_hash = '{password}'"
-            result = db.session.execute(query)
-            user_data = result.fetchone()
-            
-            if user_data:
-                admin_role = Admin.query.filter_by(user_id=user_data[0]).first()
-                
-                if admin_role:
-                    session['admin_logged_in'] = True
-                    session['admin_username'] = username
-                    session['is_default_admin'] = (admin_role.is_default == True)
-                    
-                    return jsonify({
-                        'success': True,
-                        'is_default_admin': admin_role.is_default,
-                        'admins': get_admin_list()
-                    })
-        except Exception as e:
-            print(f"SQL injection attempt failed: {e}")
-        
         return jsonify({
             'success': False,
             'message': "Invalid admin credentials."
