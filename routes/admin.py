@@ -10,7 +10,7 @@ admin_bp = Blueprint("admin", __name__)
 
 DEFAULT_ADMIN = {
     "username": "admin",
-    "password": "p@ssw0rd"
+    "password": "BoKoHaCksWinner@2025"
 }
 
 def init_admin_db():
