@@ -20,3 +20,6 @@ Fixed by generating a rnadom string for the captcha.
 
 Insecure design vulnerability in `files.py`, `upload` route didn't actually verify that the filetype was allowed.
 Fixed with simple if clause.
+
+Authentication vulnerability in `admin.py`, `admin/users/add` route didn't verify the strength of the inputted password in coordination with the register page.
+Fixed by requiring the user to enter a password with the same strength requirements as the register page.

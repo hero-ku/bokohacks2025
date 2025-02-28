@@ -4,6 +4,7 @@ from functools import wraps
 from models.user import User
 from models.admin import Admin
 from extensions import db
+from utils.auth import verify_password
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -78,7 +79,7 @@ def admin():
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
             admin_role = Admin.query.filter_by(user_id=user.id).first()
-            
+
             if admin_role:
                 session['admin_logged_in'] = True
                 session['admin_username'] = username
@@ -245,6 +246,9 @@ def add_user():
         
         if User.query.filter_by(username=username).first():
             return jsonify({'success': False, 'message': "Username already exists"})
+        
+        if not verify_password(password):
+            return jsonify({'success': False, 'message': "Password is too weak. Make sure it has at least 8 characters, one uppercase letter, one number, and one special character."})
         
         new_user = User(username=username)
         new_user.set_password(password)
