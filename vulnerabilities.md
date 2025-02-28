@@ -14,3 +14,5 @@ Fixed by requiring the user to enter a password that is at least 8 characters lo
 
 Insecure design vulnerability in `retirement.py`, `contribute` route allowed user to schedule multiple contributions occur before the subsequent contributions finished, bypassing the fund validation, and allowing funds to go into the negatives.
 Fixed by first transitioning retirement fund storage to the database and then adding check constraints.
+
+Insecure design vulnerability in `captcha.py`, `captcha/generate` route doesn't return a randomly generated CAPTCHA, removing any challenge for botted registration.
